@@ -1,30 +1,54 @@
 <template>
-  <div class="flowchart-container" 
-    @mousemove="handleMove" 
+  <div class="flowchart-container"
+    @wheel="zoomEvent"
+    @mousemove="handleMove"
     @mouseup="handleUp"
     @mousedown="handleDown">
-    <svg width="100%" :height="`${height}px`">
-      <flowchart-link v-bind.sync="link" 
-        v-for="(link, index) in lines" 
-        :key="`link${index}`"
-        @deleteLink="linkDelete(link.id)">
-      </flowchart-link>
-    </svg>
-    <flowchart-node v-bind.sync="node" 
-      v-for="(node, index) in scene.nodes" 
-      :key="`node${index}`"
-      :options="nodeOptions"
-      @linkingStart="linkingStart(node.id)"
-      @linkingStop="linkingStop(node.id)"
-      @nodeSelected="nodeSelected(node.id, $event)">
-    </flowchart-node>
+
+    <div
+            :style="'transform: scale('+ zoom + ');'"
+    >
+
+      <svg width="100%" :height="`${height}`" >
+        <g id="zoomTarget">
+        <flowchart-link v-bind.sync="link"
+          v-for="(link, index) in lines"
+          :key="`link${index}`"
+          @deleteLink="linkDelete(link.id)">
+        </flowchart-link>
+        </g>
+
+      </svg>
+
+      <flowchart-node v-bind.sync="node"
+                      :style="transformMatrix"
+                      v-for="(node, index) in scene.nodes"
+                      :key="`node${index}`"
+                      :options="nodeOptions"
+                      @linkingStart="linkingStart(node.id, $event)"
+                      @linkingStop="linkingStop(node.id, $event)"
+                      @nodeSelected="nodeSelected(node.id, $event)"
+                      @nodeContentDblclick="nodeContentDblclick(node.id, $event)"
+                      :horizontal="horizontal"
+                      :nodeWidth="nodeWidth"
+                      :nodeHeight="nodeHeight"
+                      :portSize="portSize"
+      >
+        <slot slot="nodeContent" name="nodeContent" v-bind:nodeContent="{node}"></slot>
+
+      </flowchart-node>
+
+    </div>
   </div>
+
 </template>
 
 <script>
 import FlowchartLink from './FlowchartLink.vue';
 import FlowchartNode from './FlowchartNode.vue';
 import { getMousePosition } from '../assets/utilty/position';
+
+
 
 export default {
   name: 'VueFlowchart',
@@ -45,9 +69,31 @@ export default {
       type: Number,
       default: 400,
     },
+    horizontal: {
+      type: Boolean,
+      default: false
+    },
+    nodeWidth: {
+      type: Number,
+      default: 120
+    },
+    nodeHeight: {
+      type: Number,
+      default: 80
+    },
+    portSize: {
+      type: Number,
+      default: 20
+    },
+
   },
   data() {
     return {
+      test: {
+        x: 0,
+        y: 0
+      },
+      zoom: 1,
       action: {
         linking: false,
         dragging: false,
@@ -72,6 +118,11 @@ export default {
     FlowchartNode,
   },
   computed: {
+    transformMatrix(){
+      if(document.getElementById("zoomTarget"))
+        return document.getElementById("zoomTarget")[0].getAttribute("transform");
+      return ""
+    },
     nodeOptions() {
       return {
         centerY: this.scene.centerY,
@@ -83,16 +134,24 @@ export default {
       }
     },
     lines() {
+
+      let position = [];
+      position[0] = this.horizontal ? "right" : 'bottom';
+      position[1] = this.horizontal ? "left" : 'top';
+
       const lines = this.scene.links.map((link) => {
-        const fromNode = this.findNodeWithID(link.from)
-        const toNode = this.findNodeWithID(link.to)
+
+        const fromNode = this.findNodeWithID(link.from.node)
+        const toNode = this.findNodeWithID(link.to.node)
+
         let x, y, cy, cx, ex, ey;
         x = this.scene.centerX + fromNode.x;
         y = this.scene.centerY + fromNode.y;
-        [cx, cy] = this.getPortPosition('bottom', x, y);
+
+        [cx, cy] = this.getPortPosition(position[0], x, y, link.from.output, fromNode.outputs.length);
         x = this.scene.centerX + toNode.x;
         y = this.scene.centerY + toNode.y;
-        [ex, ey] = this.getPortPosition('top', x, y);
+        [ex, ey] = this.getPortPosition(position[1], x, y, link.to.input, toNode.inputs.length);
         return { 
           start: [cx, cy], 
           end: [ex, ey],
@@ -101,11 +160,14 @@ export default {
       })
       if (this.draggingLink) {
         let x, y, cy, cx;
-        const fromNode = this.findNodeWithID(this.draggingLink.from)
+
+        const fromNode = this.findNodeWithID(this.draggingLink.from.node)
+
         x = this.scene.centerX + fromNode.x;
         y = this.scene.centerY + fromNode.y;
-        [cx, cy] = this.getPortPosition('bottom', x, y);
-        // push temp dragging link, mouse cursor postion = link end postion 
+        [cx, cy] = this.getPortPosition(position[0], x, y, this.draggingLink.from.output, fromNode.outputs.length);
+        // push temp dragging link, mouse cursor postion = link end postion
+
         lines.push({ 
           start: [cx, cy], 
           end: [this.draggingLink.mx, this.draggingLink.my],
@@ -118,35 +180,97 @@ export default {
     this.rootDivOffset.top = this.$el ? this.$el.offsetTop : 0;
     this.rootDivOffset.left = this.$el ? this.$el.offsetLeft : 0;
     // console.log(22222, this.rootDivOffset);
+
+    /*let target = document.getElementById('zoomTarget');
+    console.log(target);
+
+    let instance = PanZoom(target);
+    console.log(instance.getTransform());
+
+    instance.on('zoom', function() {
+      console.log(instance.getTransform());
+    });
+    /*
+        instance.on('panend', function(e) {
+          console.log('Fired when pan ended', e);
+        });
+
+        instance.on('zoom', function(e) {
+          console.log('Fired when `element` is zoomed', e);
+        });
+
+        instance.on('zoomend', function(e) {
+          console.log('Fired when zoom animation ended', e);
+        });
+
+        instance.on('transform', function(e) {
+          // This event will be called along with events above.
+          console.log('Fired when any transformation has happened', e);
+        });*/
+    /*if(target){
+      PanZoom(target);
+    }*/
   },
   methods: {
+    zoomEvent(event){
+
+      console.log("tady")
+      const min = 0.5;
+      const max = 2;
+      const step = 0.1;
+
+      if(event.deltaY < 0 && this.zoom < max) {
+        this.zoom += step;
+      } else if(event.deltaY > 0 && this.zoom > min) {
+        this.zoom -= step;
+      }
+    },
     findNodeWithID(id) {
       return this.scene.nodes.find((item) => {
-          return id === item.id
+        return id === item.id
       })
     },
-    getPortPosition(type, x, y) {
-      if (type === 'top') {
-        return [x + 40, y];
+    getPortPosition(type, x, y, port, isMultiport) {
+      let portOffset = 0;
+
+      if(isMultiport > 1) {
+        if (port === 1) {
+          portOffset = -this.portSize;
+        } else {
+          portOffset = this.portSize;
+        }
       }
-      else if (type === 'bottom') {
-        return [x + 40, y + 80];
+
+      switch (type) {
+        case 'top':
+          return [x + this.nodeWidth / 2, y];
+        case 'bottom':
+          return [x + this.nodeWidth / 2, y + this.nodeHeight];
+        case 'left':
+          return [x - this.portSize / 2, y + this.nodeHeight / 2  + portOffset];
+        case 'right':
+          return [x + this.nodeWidth + this.portSize / 2, y + this.nodeHeight / 2  + portOffset];
       }
     },
-    linkingStart(index) {
+    linkingStart(index, outputId) {
+      console.log(index, outputId)
       this.action.linking = true;
       this.draggingLink = {
-        from: index,
-        mx: 0,
-        my: 0,
+        from: {node: index, output: outputId},
+        mx: undefined,
+        my: undefined,
       };
     },
-    linkingStop(index) {
+    linkingStop(index, inputId) {
+      console.log(index, inputId)
       // add new Link
-      if (this.draggingLink && this.draggingLink.from !== index) {
+      if (this.draggingLink && this.draggingLink.from.node !== index) {
         // check link existence
         const existed = this.scene.links.find((link) => {
-          return link.from === this.draggingLink.from && link.to === index;
+          return link.from.node === this.draggingLink.from.node
+                  && link.to.node === index
+                  && link.to.input === inputId
+                  && link.from.output === this.draggingLink.from.output;
         })
         if (!existed) {
           let maxID = Math.max(0, ...this.scene.links.map((link) => {
@@ -154,11 +278,14 @@ export default {
           }))
           const newLink = {
             id: maxID + 1,
-            from: this.draggingLink.from,
-            to: index,
+            from: {node: this.draggingLink.from.node, output: this.draggingLink.from.output},
+            to: {node: index, input: inputId},
           };
+          console.log(newLink)
           this.scene.links.push(newLink)
           this.$emit('linkAdded', newLink)
+        } else {
+          console.log("Link already exists!");
         }
       }
       this.draggingLink = null
@@ -251,9 +378,12 @@ export default {
         return node.id !== id;
       })
       this.scene.links = this.scene.links.filter((link) => {
-        return link.from !== id && link.to !== id
+        return link.from.node !== id && link.to.node !== id
       })
       this.$emit('nodeDelete', id)
+    },
+    nodeContentDblclick(id, e) {
+      this.$emit('nodeContentDblclick', id, e)
     }
   },
 }
@@ -265,9 +395,30 @@ export default {
   margin: 0;
   background: #ddd;
   position: relative;
-  overflow: hidden;
+
   svg {
     cursor: grab;
+      left: 0px;
+      top: 0px;
+      width: 100%;
+      height: 100%;
+      display: block;
+      min-width: 400vh;
+      min-height: 400vw;
+      position: absolute;
+      background-image: none;
+  }
+
+  .float-left {
+    float: left;
+  }
+
+  .float-right {
+    float: right;
+  }
+
+  .mdi {
+    font-size: 1.6rem;
   }
 }
 </style>

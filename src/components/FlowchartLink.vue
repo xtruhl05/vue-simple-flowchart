@@ -1,6 +1,8 @@
 <template>
   <g @mouseover="handleMouseOver"
-    @mouseleave="handleMouseLeave">
+    @mouseleave="handleMouseLeave"
+     :id="'link-' +  id"
+  >
     <path :d="dAttr" :style="pathStyle"></path>
     <a v-if="show.delete" @click="deleteLink">
       <text 
@@ -33,6 +35,10 @@ export default {
       }
     },
     id: Number,
+    curvature: {
+      type: Number,
+      default: 0
+    },
   },
   data() {
     return {
@@ -82,13 +88,18 @@ export default {
       }
     },
     arrowTransform() {
+
       const [arrowX, arrowY] = this.caculateCenterPoint();
       const degree = this.caculateRotation()
-      return `translate(${arrowX}, ${arrowY}) rotate(${degree})`;
+
+      if(isNaN(arrowX) || isNaN(arrowY) || isNaN(degree))
+        return;
+      else
+        return `translate(${arrowX}, ${arrowY}) rotate(${degree})`;
     },
     dAttr() {
       let cx = this.start[0], cy = this.start[1], ex = this.end[0], ey = this.end[1];
-      let x1 = cx, y1 = cy + 50, x2 = ex, y2 = ey - 50;
+      let x1 = cx, y1 = cy + this.curvature, x2 = ex, y2 = ey - this.curvature;
       return `M ${cx}, ${cy} C ${x1}, ${y1}, ${x2}, ${y2}, ${ex}, ${ey}`;
     }
   }
