@@ -315,9 +315,11 @@ export default {
       this.mouse.lastY = e.pageY || e.clientY + document.documentElement.scrollTop
     },
     handleMove(e) {
+
+
       if (this.action.linking) {
         [this.mouse.x, this.mouse.y] = getMousePosition(this.$el, e);
-        [this.draggingLink.mx, this.draggingLink.my] = [this.mouse.x, this.mouse.y];
+        [this.draggingLink.mx, this.draggingLink.my] = [this.mouse.x * (1/this.zoom), this.mouse.y * (1/this.zoom)];
       }
       if (this.action.dragging) {
         this.mouse.x = e.pageX || e.clientX + document.documentElement.scrollLeft
@@ -327,7 +329,7 @@ export default {
 
         this.mouse.lastX = this.mouse.x;
         this.mouse.lastY = this.mouse.y;
-        this.moveSelectedNode(diffX, diffY);
+        this.moveSelectedNode(diffX * (1/this.zoom), diffY * (1/this.zoom));
       }
       if (this.action.scrolling) {
         [this.mouse.x, this.mouse.y] = getMousePosition(this.$el, e);
@@ -337,8 +339,8 @@ export default {
         this.mouse.lastX = this.mouse.x;
         this.mouse.lastY = this.mouse.y;
 
-        this.scene.centerX += diffX;
-        this.scene.centerY += diffY;
+        this.scene.centerX += diffX * (1/this.zoom);
+        this.scene.centerY += diffY * (1/this.zoom);
 
         // this.hasDragged = true
       }
