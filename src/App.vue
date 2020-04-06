@@ -18,36 +18,41 @@
     ></FlowchartDummyNode>
     </div>
 
-    <simple-flowchart :scene.sync="scene"
-      @nodeClick="nodeClick"
-      @nodeDelete="nodeDelete"
-      @linkBreak="linkBreak"
-      @linkAdded="linkAdded"
-      @canvasClick="canvasClick"
-      @nodeContentDblclick="nodeContentDblclick"
-      horizontal
-      :nodeWidth="150"
-      :nodeHeight="80"
-      :portSize="20"
-      :height="800">
+    <div @wheel="zoomEvent">
+      <simple-flowchart :scene.sync="scene"
+        @nodeClick="nodeClick"
+        @nodeDelete="nodeDelete"
+        @linkBreak="linkBreak"
+        @linkAdded="linkAdded"
+        @canvasClick="canvasClick"
+        @nodeContentDblclick="nodeContentDblclick"
+        horizontal
+        :nodeWidth="150"
+        :nodeHeight="80"
+        :portSize="20"
+        :height="800"
+        :width="1400"
+        :zoom="zoom"
+      >
 
-      <template slot="nodeContent" slot-scope="node">
-        <template v-if="node.nodeContent.node.type === 'comparator'">
-          X <span v-html="node.nodeContent.node.content"></span> Y
+        <template slot="nodeContent" slot-scope="node">
+          <template v-if="node.nodeContent.node.type === 'comparator'">
+            X <span v-html="node.nodeContent.node.content"></span> Y
+          </template>
+
+          <template v-else-if="node.nodeContent.node.type === 'constant'">
+            <span v-if="node.nodeContent.node.unit === 'pH'">pH </span>
+             <span v-html="node.nodeContent.node.content"></span>
+            <span v-if="node.nodeContent.node.unit !== 'pH'">{{node.nodeContent.node.unit}}</span>
+          </template>
+
+          <template v-else>
+            {{node.nodeContent.node.content}}
+          </template>
         </template>
 
-        <template v-else-if="node.nodeContent.node.type === 'constant'">
-          <span v-if="node.nodeContent.node.unit === 'pH'">pH </span>
-           <span v-html="node.nodeContent.node.content"></span>
-          <span v-if="node.nodeContent.node.unit !== 'pH'">{{node.nodeContent.node.unit}}</span>
-        </template>
-
-        <template v-else>
-          {{node.nodeContent.node.content}}
-        </template>
-      </template>
-
-    </simple-flowchart>
+      </simple-flowchart>
+    </div>
   </div>
 </template>
 
@@ -74,6 +79,7 @@ export default {
   },
   data() {
     return {
+      zoom: 1,
       menu: [
           {
             id: 'teplota',
@@ -258,6 +264,19 @@ export default {
     }
   },
   methods: {
+    zoomEvent(event){
+
+      console.log("tady venku")
+      const min = 0.5;
+      const max = 2;
+      const step = 0.1;
+
+      if(event.deltaY < 0 && this.zoom < max) {
+        this.zoom += step;
+      } else if(event.deltaY > 0 && this.zoom > min) {
+        this.zoom -= step;
+      }
+    },
     canvasClick(e) {
       console.log('canvas Click, event:', e)
     },

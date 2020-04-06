@@ -1,44 +1,37 @@
 <template>
   <div class="flowchart-container"
-    @wheel="zoomEvent"
-    @mousemove="handleMove"
-    @mouseup="handleUp"
-    @mousedown="handleDown">
+       :style="getWrapStyle"
+        @mousemove="handleMove"
+        @mouseup="handleUp"
+        @mousedown="handleDown">
 
-    <div
-            :style="'transform: scale('+ zoom + ');'"
+    <svg :style="getSvgStyle" >
+      <g id="zoomTarget">
+      <flowchart-link v-bind.sync="link"
+        v-for="(link, index) in lines"
+        :key="`link${index}`"
+        @deleteLink="linkDelete(link.id)">
+      </flowchart-link>
+      </g>
+
+    </svg>
+
+    <flowchart-node v-bind.sync="node"
+                    v-for="(node, index) in scene.nodes"
+                    :key="`node${index}`"
+                    :options="nodeOptions"
+                    @linkingStart="linkingStart(node.id, $event)"
+                    @linkingStop="linkingStop(node.id, $event)"
+                    @nodeSelected="nodeSelected(node.id, $event)"
+                    @nodeContentDblclick="nodeContentDblclick(node.id, $event)"
+                    :horizontal="horizontal"
+                    :nodeWidth="nodeWidth"
+                    :nodeHeight="nodeHeight"
+                    :portSize="portSize"
     >
+      <slot slot="nodeContent" name="nodeContent" v-bind:nodeContent="{node}"></slot>
 
-      <svg width="100%" :height="`${height}`" >
-        <g id="zoomTarget">
-        <flowchart-link v-bind.sync="link"
-          v-for="(link, index) in lines"
-          :key="`link${index}`"
-          @deleteLink="linkDelete(link.id)">
-        </flowchart-link>
-        </g>
-
-      </svg>
-
-      <flowchart-node v-bind.sync="node"
-                      :style="transformMatrix"
-                      v-for="(node, index) in scene.nodes"
-                      :key="`node${index}`"
-                      :options="nodeOptions"
-                      @linkingStart="linkingStart(node.id, $event)"
-                      @linkingStop="linkingStop(node.id, $event)"
-                      @nodeSelected="nodeSelected(node.id, $event)"
-                      @nodeContentDblclick="nodeContentDblclick(node.id, $event)"
-                      :horizontal="horizontal"
-                      :nodeWidth="nodeWidth"
-                      :nodeHeight="nodeHeight"
-                      :portSize="portSize"
-      >
-        <slot slot="nodeContent" name="nodeContent" v-bind:nodeContent="{node}"></slot>
-
-      </flowchart-node>
-
-    </div>
+    </flowchart-node>
   </div>
 
 </template>
@@ -69,6 +62,10 @@ export default {
       type: Number,
       default: 400,
     },
+    width: {
+      type: Number,
+      default: 400,
+    },
     horizontal: {
       type: Boolean,
       default: false
@@ -85,6 +82,10 @@ export default {
       type: Number,
       default: 20
     },
+    zoom: {
+      type: Number,
+      default: 1.0
+    }
 
   },
   data() {
@@ -93,7 +94,6 @@ export default {
         x: 0,
         y: 0
       },
-      zoom: 1,
       action: {
         linking: false,
         dragging: false,
@@ -118,10 +118,29 @@ export default {
     FlowchartNode,
   },
   computed: {
-    transformMatrix(){
-      if(document.getElementById("zoomTarget"))
-        return document.getElementById("zoomTarget")[0].getAttribute("transform");
-      return ""
+    getWrapStyle(){
+
+      console.log("tady uvnitř")
+      let x = this.width * (1/this.zoom);
+      let y = this.height * (1/this.zoom);
+
+      return {
+        'width': x+'px',
+        'height': y+'px',
+        'transform': 'scale('+this.zoom+')',
+        'transform-origin': "0 0"
+      }
+    },
+    getSvgStyle(){
+
+      console.log("tady uvnitř 2")
+      let x = this.width * (1/this.zoom);
+      let y = this.height * (1/this.zoom);
+
+      return {
+        'min-width': x+'px',
+        'min-height': y+'px',
+      }
     },
     nodeOptions() {
       return {
@@ -212,19 +231,6 @@ export default {
     }*/
   },
   methods: {
-    zoomEvent(event){
-
-      console.log("tady")
-      const min = 0.5;
-      const max = 2;
-      const step = 0.1;
-
-      if(event.deltaY < 0 && this.zoom < max) {
-        this.zoom += step;
-      } else if(event.deltaY > 0 && this.zoom > min) {
-        this.zoom -= step;
-      }
-    },
     findNodeWithID(id) {
       return this.scene.nodes.find((item) => {
         return id === item.id
@@ -400,11 +406,7 @@ export default {
     cursor: grab;
       left: 0px;
       top: 0px;
-      width: 100%;
-      height: 100%;
       display: block;
-      min-width: 400vh;
-      min-height: 400vw;
       position: absolute;
       background-image: none;
   }
