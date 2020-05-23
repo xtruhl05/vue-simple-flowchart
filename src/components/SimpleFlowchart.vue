@@ -139,14 +139,10 @@ export default {
         'left': 0*/
       }
     },
-    getOuterWrapStyle(){
-
-      let x = this.width;
-      let y = this.height;
-
+    outerWrapStyle(){
       return {
-        'width': x+'px',
-        'height': y+'px',
+        'width': this.width+'px',
+        'height': this.height+'px',
       }
     },
 
