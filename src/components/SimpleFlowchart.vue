@@ -1,37 +1,39 @@
 <template>
-  <div class="flowchart-container"
-       :style="getWrapStyle"
-        @mousemove="handleMove"
-        @mouseup="handleUp"
-        @mousedown="handleDown">
+  <div class="outerWrap" :style="outerWrapStyle">
+    <div class="flowchart-container"
+         :style="getWrapStyle"
+          @mousemove="handleMove"
+          @mouseup="handleUp"
+          @mousedown="handleDown">
 
-    <svg :style="getSvgStyle" >
-      <g id="zoomTarget">
-      <flowchart-link v-bind.sync="link"
-        v-for="(link, index) in lines"
-        :key="`link${index}`"
-        @deleteLink="linkDelete(link.id)">
-      </flowchart-link>
-      </g>
+      <svg :style="getSvgStyle" >
+        <g id="zoomTarget">
+        <flowchart-link v-bind.sync="link"
+          v-for="(link, index) in lines"
+          :key="`link${index}`"
+          @deleteLink="linkDelete(link.id)">
+        </flowchart-link>
+        </g>
 
-    </svg>
+      </svg>
 
-    <flowchart-node v-bind.sync="node"
-                    v-for="(node, index) in scene.nodes"
-                    :key="`node${index}`"
-                    :options="nodeOptions"
-                    @linkingStart="linkingStart(node.id, $event)"
-                    @linkingStop="linkingStop(node.id, $event)"
-                    @nodeSelected="nodeSelected(node.id, $event)"
-                    @nodeContentDblclick="nodeContentDblclick(node.id, $event)"
-                    :horizontal="horizontal"
-                    :nodeWidth="nodeWidth"
-                    :nodeHeight="nodeHeight"
-                    :portSize="portSize"
-    >
-      <slot slot="nodeContent" name="nodeContent" v-bind:nodeContent="{node}"></slot>
+      <flowchart-node v-bind.sync="node"
+                      v-for="(node, index) in scene.nodes"
+                      :key="`node${index}`"
+                      :options="nodeOptions"
+                      @linkingStart="linkingStart(node.id, $event)"
+                      @linkingStop="linkingStop(node.id, $event)"
+                      @nodeSelected="nodeSelected(node.id, $event)"
+                      @nodeContentDblclick="nodeContentDblclick(node.id, $event)"
+                      :horizontal="horizontal"
+                      :nodeWidth="nodeWidth"
+                      :nodeHeight="nodeHeight"
+                      :portSize="portSize"
+      >
+        <slot slot="nodeContent" name="nodeContent" v-bind:nodeContent="{node}"></slot>
 
-    </flowchart-node>
+      </flowchart-node>
+    </div>
   </div>
 
 </template>
@@ -121,6 +123,8 @@ export default {
     getWrapStyle(){
 
       console.log("tady uvnitř")
+
+
       let x = this.width * (1/this.zoom);
       let y = this.height * (1/this.zoom);
 
@@ -128,9 +132,24 @@ export default {
         'width': x+'px',
         'height': y+'px',
         'transform': 'scale('+this.zoom+')',
-        'transform-origin': "0 0"
+        'transform-origin': "0 0",
+        /*'display': 'block',
+        'position': 'absolute',
+        'top': 0,
+        'left': 0*/
       }
     },
+    getOuterWrapStyle(){
+
+      let x = this.width;
+      let y = this.height;
+
+      return {
+        'width': x+'px',
+        'height': y+'px',
+      }
+    },
+
     getSvgStyle(){
 
       console.log("tady uvnitř 2")
@@ -403,6 +422,7 @@ export default {
   margin: 0;
   background: #ddd;
   position: relative;
+  overflow: hidden;
 
   svg {
     cursor: grab;
