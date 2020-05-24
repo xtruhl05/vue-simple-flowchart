@@ -121,7 +121,7 @@ export default {
             id: 'comparator',
             type: 'comparator',
             label: 'Komparátor',
-            content: 'X > Y',
+            content: '&geq;',
             color: nodeColors.comparator,
             inputs: [
               {name: "I", color: "cyan"},
@@ -170,8 +170,8 @@ export default {
           },
       ],
       scene: {
-        centerX: 1024,
-        centerY: 140,
+        centerX: 2500,
+        centerY: 1000,
         scale: 1,
         nodes: [
           {

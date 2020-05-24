@@ -14,7 +14,7 @@
           <div class="node-label" :style="'background: '+color">
               {{label}}
           </div>
-          <div v-text="content" class="node-content"></div>
+          <div v-html="getContent" class="node-content"></div>
         </div>
         <div v-for="(i, index) in outputs.length"
              :key="type + '-' +  id + '-output-' + i"
@@ -111,7 +111,14 @@ export default {
           width: "min-content",
           height: "min-content"
       }
-    }
+    },
+      getContent(){
+          if(this.type === "comparator"){
+              return "X " + this.content + ' Y';
+          }
+
+          return this.content;
+      }
   },
   methods: {
       multiportStyle(position, isInput){
