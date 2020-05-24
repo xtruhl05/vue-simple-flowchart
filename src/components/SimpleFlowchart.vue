@@ -1,10 +1,11 @@
 <template>
-  <div class="outerWrap" :style="outerWrapStyle">
+  <div class="outerWrap " :style="outerWrapStyle"
+       @mousemove="handleMove"
+       @mouseup="handleUp"
+       @mousedown="handleDown">
     <div class="flowchart-container"
          :style="getWrapStyle"
-          @mousemove="handleMove"
-          @mouseup="handleUp"
-          @mousedown="handleDown">
+        >
 
       <svg :style="getSvgStyle" >
         <g id="zoomTarget">
@@ -122,21 +123,14 @@ export default {
   computed: {
     getWrapStyle(){
 
-      console.log("tady uvnitř")
-
-
-      let x = this.width * (1/this.zoom);
-      let y = this.height * (1/this.zoom);
-
       return {
-        'width': x+'px',
-        'height': y+'px',
+        'width':  this.width * 3 +'px',
+        'height':  this.height * 3 +'px',
         'transform': 'scale('+this.zoom+')',
-        'transform-origin': "0 0",
-        /*'display': 'block',
-        'position': 'absolute',
-        'top': 0,
-        'left': 0*/
+        'transform-origin':  'center center',
+        'position':  'absolute',
+        'left':  '-100%',
+        'top':  '-100%',
       }
     },
     outerWrapStyle(){
@@ -148,9 +142,8 @@ export default {
 
     getSvgStyle(){
 
-      console.log("tady uvnitř 2")
-      let x = this.width * (1/this.zoom);
-      let y = this.height * (1/this.zoom);
+      let x = this.width * 3;
+      let y = this.height * 3;
 
       return {
         'min-width': x+'px',
@@ -213,37 +206,6 @@ export default {
   mounted() {
     this.rootDivOffset.top = this.$el ? this.$el.offsetTop : 0;
     this.rootDivOffset.left = this.$el ? this.$el.offsetLeft : 0;
-    // console.log(22222, this.rootDivOffset);
-
-    /*let target = document.getElementById('zoomTarget');
-    console.log(target);
-
-    let instance = PanZoom(target);
-    console.log(instance.getTransform());
-
-    instance.on('zoom', function() {
-      console.log(instance.getTransform());
-    });
-    /*
-        instance.on('panend', function(e) {
-          console.log('Fired when pan ended', e);
-        });
-
-        instance.on('zoom', function(e) {
-          console.log('Fired when `element` is zoomed', e);
-        });
-
-        instance.on('zoomend', function(e) {
-          console.log('Fired when zoom animation ended', e);
-        });
-
-        instance.on('transform', function(e) {
-          // This event will be called along with events above.
-          console.log('Fired when any transformation has happened', e);
-        });*/
-    /*if(target){
-      PanZoom(target);
-    }*/
   },
   methods: {
     findNodeWithID(id) {
@@ -414,6 +376,13 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped lang="scss">
+  .outerWrap {
+    margin: 0;
+    background: rgba(255,0,0,0.1);
+    position: relative;
+    overflow: hidden;
+  }
+
 .flowchart-container {
   margin: 0;
   background: #ddd;
