@@ -271,9 +271,9 @@ export default {
       const max = 2;
       const step = 0.1;
 
-      if(event.deltaY < 0 && this.zoom < max) {
+      if(event.deltaY < 0 && this.zoom <= max) {
         this.zoom += step;
-      } else if(event.deltaY > 0 && this.zoom > min) {
+      } else if(event.deltaY > 0 && this.zoom - step  > min) {
         this.zoom -= step;
       }
     },

@@ -1,11 +1,14 @@
 <template>
-  <div class="outerWrap " :style="outerWrapStyle"
+  <div class="outerWrap "
+       :style="outerWrapStyle"
        @mousemove="handleMove"
        @mouseup="handleUp"
-       @mousedown="handleDown">
+       @mousedown="handleDown"
+  >
+
     <div class="flowchart-container"
          :style="getWrapStyle"
-        >
+    >
 
       <svg :style="getSvgStyle" >
         <g id="zoomTarget">
@@ -42,7 +45,7 @@
 <script>
 import FlowchartLink from './FlowchartLink.vue';
 import FlowchartNode from './FlowchartNode.vue';
-import { getMousePosition } from '../assets/utilty/position';
+import {getMousePosition} from '../assets/utilty/position';
 
 
 
@@ -141,13 +144,9 @@ export default {
     },
 
     getSvgStyle(){
-
-      let x = this.width * 3;
-      let y = this.height * 3;
-
       return {
-        'min-width': x+'px',
-        'min-height': y+'px',
+        'min-width': this.width * 3 +'px',
+        'min-height': this.height * 3 +'px',
       }
     },
     nodeOptions() {
@@ -293,14 +292,25 @@ export default {
     },
     handleMove(e) {
 
-
       if (this.action.linking) {
-        [this.mouse.x, this.mouse.y] = getMousePosition(this.$el, e);
-        [this.draggingLink.mx, this.draggingLink.my] = [this.mouse.x * (1/this.zoom), this.mouse.y * (1/this.zoom)];
+
+        if(e.target.nodeName === "svg" || e.target.nodeName === "path") {
+          this.draggingLink.mx = e.layerX;
+          this.draggingLink.my = e.layerY;
+        }
+         /* this.oldmx = this.draggingLink.mx + 1;
+          this.oldmy = this.draggingLink.my + 1;
+          console.log("->", this.draggingLink.mx, this.draggingLink.my)
+        } else {
+          this.draggingLink.mx = this.oldmx + e.layerX;
+          this.draggingLink.my = this.oldmy + e.layerY;
+          console.log("--",  this.oldmx + e.layerX, e.layerX, e)
+        }*/
+
       }
       if (this.action.dragging) {
-        this.mouse.x = e.pageX || e.clientX + document.documentElement.scrollLeft
-        this.mouse.y = e.pageY || e.clientY + document.documentElement.scrollTop
+        this.mouse.x = e.pageX || e.clientX + document.documentElement.scrollLeft;
+        this.mouse.y = e.pageY || e.clientY + document.documentElement.scrollTop;
         let diffX = this.mouse.x - this.mouse.lastX;
         let diffY = this.mouse.y - this.mouse.lastY;
 
@@ -381,33 +391,31 @@ export default {
     background: rgba(255,0,0,0.1);
     position: relative;
     overflow: hidden;
-  }
 
-.flowchart-container {
-  margin: 0;
-  background: #ddd;
-  position: relative;
-  overflow: hidden;
 
-  svg {
-    cursor: grab;
-      left: 0px;
-      top: 0px;
-      display: block;
+    .flowchart-container {
+      margin: 0;
+      background: #ddd;
       position: absolute;
-      background-image: none;
-  }
+      top: 0;
+      left: 0;
 
-  .float-left {
-    float: left;
-  }
+      svg {
+        cursor: grab;
 
-  .float-right {
-    float: right;
-  }
+      }
 
-  .mdi {
-    font-size: 1.6rem;
+      .float-left {
+        float: left;
+      }
+
+      .float-right {
+        float: right;
+      }
+
+      .mdi {
+        font-size: 1.6rem;
+      }
+    }
   }
-}
 </style>
