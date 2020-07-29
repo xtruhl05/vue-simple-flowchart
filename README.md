@@ -1,3 +1,11 @@
+Modified for use in master's thesis.
+
+Added horizontal mode, multiport support and zooming support.
+
+![Image](http://jant.cz/simulationBehaviorNew.png)
+
+------------------------
+
 # vue-simple-flowchart
 
 ## Introduction
